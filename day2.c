@@ -47,20 +47,29 @@ int main(void) {
         while (buff[pos++] != ':'); // First :
         pos++; // Skip space
 
-        int valid = 1;
+        int max_r = 0;
+        int max_g = 0;
+        int max_b = 0;
+
         while (buff[pos] != '\n') {
             int value = parse_num(buff, &pos, line_len);
             pos++;
 
             switch (buff[pos]) {
                 case 'r':
-                    valid = valid && value <= RED_MAX;
+                    if (value > max_r) {
+                        max_r = value;
+                    }
                     break;
                 case 'g':
-                    valid = valid && value <= GREEN_MAX;
+                    if (value > max_g) {
+                        max_g = value;
+                    }
                     break;
                 case 'b':
-                    valid = valid && value <= BLUE_MAX;
+                    if (value > max_b) {
+                        max_b = value;
+                    }
                     break;
                 default:
                     assert(0);
@@ -71,9 +80,7 @@ int main(void) {
             }
         }
 
-        if (valid) {
-            sum += game;
-        }
+        sum += (max_r * max_g * max_b);
 
         memmove(buff, buff + line_len, LINE_MAX - line_len);
         buff_len -= line_len;
