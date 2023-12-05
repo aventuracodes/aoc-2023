@@ -7,15 +7,17 @@
 #define MAX_SYMBOLS 2048
 #define MAX_NUMBERS 2048
 
-struct part_number {
+struct number {
     int value;
     int x_start;
     int x_end;
     int y;
+    int is_part_number;
 };
 
-struct symbol_pos {
+struct symbol {
     int x, y;
+    int is_star;
 };
 
 static int is_digit(char c) {
@@ -26,7 +28,7 @@ static int is_symbol(char c) {
     return c && (c != '.') && !is_digit(c) && (c != '\n');
 }
 
-int parse_number(char* line, int start, int y, struct part_number* number) {
+int parse_number(char* line, int start, int y, struct number* number) {
     assert(is_digit(line[start]));
 
     int sum = 0;
@@ -46,6 +48,7 @@ int parse_number(char* line, int start, int y, struct part_number* number) {
     number->x_start = start;
     number->x_end = end;
     number->y = y;
+    number->is_part_number = 0;
 
     return end;
 }
@@ -88,10 +91,10 @@ int main(int argc, char** argv) {
     char line[MAX_LINE];
 
     int number_count = 0;
-    struct part_number numbers[MAX_NUMBERS];
+    struct number numbers[MAX_NUMBERS];
 
     int symbol_count = 0;
-    struct symbol_pos symbols[MAX_SYMBOLS];
+    struct symbol symbols[MAX_SYMBOLS];
 
     // Parse input
     int y = 0;
@@ -102,23 +105,47 @@ int main(int argc, char** argv) {
                 x = parse_number(line, x, y, &numbers[number_count++]);
             } else if (is_symbol(line[x])) {
                 assert(symbol_count < MAX_SYMBOLS);
-                symbols[symbol_count++] = (struct symbol_pos) {x, y};
+                symbols[symbol_count++] = (struct symbol) {x, y, line[x] == '*'};
             }
         }
         y++;
     }
 
-    // Preform sum
-    int sum = 0;
+    // Find part numbers
     for (int i = 0; i < symbol_count; i++) {
         int x = symbols[i].x;
         int y = symbols[i].y;
 
         for (int j = 0; j < number_count; j++) {
-            struct part_number* num = &numbers[j];
+            struct number* num = &numbers[j];
             if (next_to(num->x_start, num->x_end, num->y, x, y)) {
-                sum += num->value;
+                num->is_part_number = 1;
             }
+        }
+    }
+
+    // Find gears
+    int sum = 0;
+    for (int i = 0; i < symbol_count; i++) {
+        if (!symbols[i].is_star) continue;
+
+        int x = symbols[i].x;
+        int y = symbols[i].y;
+
+        int product = 1;
+        int num_next_to = 0;
+        for (int j = 0; j < number_count; j++) {
+            struct number* num = &numbers[j];
+            if (!num->is_part_number) continue;
+
+            if (next_to(num->x_start, num->x_end, num->y, x, y)) {
+                num_next_to += 1;
+                product *= num->value;
+            }
+        }
+
+        if (num_next_to == 2) {
+            sum += product;
         }
     }
 
