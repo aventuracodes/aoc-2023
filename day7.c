@@ -8,8 +8,6 @@
 #define MAX_LINE 512
 #define MAX_HANDS 1024
 
-
-
 typedef struct {
     uint32_t bid;
     char cards[6];
@@ -44,7 +42,7 @@ typedef enum {
     FIVE_OF_A_KIND
 } hand_type;
 
-const char cards[] = {'A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'};
+const char cards[] = {'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J'};
 
 int count(char c, const char* cards) {
     int count = 0;
@@ -57,20 +55,25 @@ int count(char c, const char* cards) {
 }
 
 hand_type classify(const char* c) {
-    if (count(c[0], c) == 5) {
-        return FIVE_OF_A_KIND;
+    if (count('J', c) == 5) return FIVE_OF_A_KIND;
+
+    for (int i = 0; i < 5; i++) {
+        if (c[i] != 'J' && (count(c[i], c) + count('J', c)) == 5) {
+            return FIVE_OF_A_KIND;
+        }
     }
 
-    for (int i = 0; i < 2; i++) {
-        if (count(c[i], c) == 4) {
+    for (int i = 0; i < 5; i++) {
+        if (c[i] != 'J' && (count(c[i], c) + count('J', c)) == 4) {
             return FOUR_OF_A_KIND;
         }
     }
 
-    for (int i = 0; i < 3; i++) {
-        if (count(c[i], c) == 3) {
+    for (int i = 0; i < 5; i++) {
+        if (c[i] != 'J' && (count(c[i], c) + count('J', c)) == 3) {
+            int jokers_left = count('J', c) + (count(c[i], c) - 3);
             for (int j = 0; j < 5; j++) {
-                if (c[i] != c[j] && count(c[j], c) == 2) {
+                if (c[j] != 'J' && c[i] != c[j] && (count(c[j], c) + jokers_left) == 2) {
                     return FULL_HOUSE;
                 }
             }
@@ -78,10 +81,11 @@ hand_type classify(const char* c) {
         }
     }
 
-    for (int i = 0; i < 4; i++) {
-        if (count(c[i], c) == 2) {
+    for (int i = 0; i < 5; i++) {
+        if (c[i] != 'J' && (count(c[i], c) + count('J', c)) == 2) {
+            int jokers_left = count('J', c) + (count(c[i], c) - 2);
             for (int j = 0; j < 5; j++) {
-                if (c[i] != c[j] && count(c[j], c) == 2) {
+                if (c[j] != 'J' && c[i] != c[j] && (count(c[j], c) + jokers_left) == 2) {
                     return TWO_PAIR;
                 }
             }
