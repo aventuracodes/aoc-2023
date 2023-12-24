@@ -8,11 +8,6 @@
 #define MAX_LINE 512
 #define MAX_RACES 32
 
-typedef struct {
-    uint32_t time;
-    uint32_t distance;
-} race;
-
 static int read_line(FILE* file, char* line) {
     int len = 0;
     while(1) {
@@ -32,11 +27,13 @@ static int is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
-static uint32_t parse_number(char* number_str, int* pos) {
-    uint32_t number = 0;
-    while (is_digit(number_str[*pos])) {
-        number *= 10;
-        number += (uint32_t)(number_str[*pos] - '0');
+static uint64_t parse_number(char* number_str, int* pos) {
+    uint64_t number = 0;
+    while (is_digit(number_str[*pos]) || number_str[*pos] == ' ') {
+        if (number_str[*pos] != ' ') {
+            number *= 10;
+            number += (uint64_t)(number_str[*pos] - '0');
+        }
         *pos += 1;
     }
     return number;
@@ -47,7 +44,8 @@ int main(int argc, char** argv) {
     assert(input);
 
     char line[MAX_LINE];
-    race races[MAX_RACES];
+    uint64_t time;
+    uint64_t distance;
 
     int race_count = 0;
     int pos = 0;
@@ -56,7 +54,8 @@ int main(int argc, char** argv) {
         if (!is_digit(line[pos])) {
             pos++;
         } else {
-            races[race_count++].time = parse_number(line, &pos);
+            time = parse_number(line, &pos);
+            break;
         }
     }
 
@@ -67,20 +66,19 @@ int main(int argc, char** argv) {
         if (!is_digit(line[pos])) {
             pos++;
         } else {
-            races[race_count++].distance = parse_number(line, &pos);
+            distance = parse_number(line, &pos);
+            break;
         }
     }
 
-    uint32_t margin = 1;
-    for (uint32_t r = 0; r < race_count; r++) {
-        uint32_t number = 0;
-        for (uint32_t t = 0; t < races[r].time; t++) {
-            if ((t * (races[r].time - t)) > races[r].distance) {
-                number++;
-            }
+    printf("%"PRIu64" %"PRIu64" \n", time, distance);
+
+    uint64_t number = 0;
+    for (uint64_t t = 0; t < time; t++) {
+        if ((t * (time - t)) > distance) {
+            number++;
         }
-        margin *= number;
     }
 
-    printf("%"PRIu32"\n", margin);
+    printf("%"PRIu64"\n", number);
 }
